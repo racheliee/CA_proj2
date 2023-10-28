@@ -33,7 +33,7 @@ def read_data_file(file_path):
                 binary[dict_key]= binary_value[index:index+8]
                 index += 8
                 dict_key += 1
-                
+
     #filling in the rest with 0xFF
     while(dict_key <= 268500991):
         binary[dict_key] = "11111111"
@@ -171,10 +171,10 @@ def i_format_disassemble(binary_instr):
     elif opcode == '1100111' and funct3 == '000': #jalr 
         #R[rd] = PC + 4
         #PC = (R[rs1] + SignExt(imm12)) & (~1) for alignment purposes
-        register[rd] = pc_counter + 1
-        pc_counter = (register[rs1] + immediate/4) & (~1) #check up on the divide by 4
+        register[rd] = (pc_counter + 1)*4
+        pc_counter = (int(register[rs1]/4) + int(immediate/4)) #
+        print("jalr x{}, x{}, {}".format(rd, rs1, immediate))
     
-
     return
 
 #S Format
@@ -252,6 +252,11 @@ def uj_format_disassemble(binary_instr):
     global pc_counter
 
     #jal rd, imm
+    #R[rd] = PC + 4
+    #PC = PC + SignExt(imm20 << 1)
+    register[rd] = (pc_counter + 1)* 4
+    pc_counter += int(immediate/4)
+    print("jal x{}, {}".format(rd, immediate))
 
     return 
 
@@ -266,11 +271,14 @@ def u_format_disassemble(binary_instr):
     global pc_counter
 
     if opcode == '0110111': #lui
-        register[rd] = immediate
+        register[rd] = immediate 
         print("lui x{}, {}".format(rd, immediate))
         pc_counter += 1
     elif opcode == '0010111': #auipc
-        assembly = 'auipc x' + str(rd) + ', ' + str(immediate)
+        #auipc rd, D[31:12]+D[11] addi rd, rd, D[11:0]
+        #Load absolute address where D = symbol – pc
+        print("auipc x{}, {}".format(rd, immediate))
+
     return 
 
 #main ====================================================================================
