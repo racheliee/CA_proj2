@@ -114,8 +114,8 @@ def i_format_disassemble(binary_instr):
     global pc_counter
 
     if opcode == '0000011' and funct3 == '010': #lw
-        if rs1 == 536870912: #0x20000000 saves user input
-            register[rd] = input()
+        if register[rs1] == 536870912: #0x20000000 saves user input
+            register[rd] = int(input())
         else:
             index = register[rs1] + immediate #index of the data_file
             register[rd] = to_twos_comp(data_file[index] + data_file[index+1] + data_file[index+2] + data_file[index+3], 32)
@@ -166,12 +166,15 @@ def s_format_disassemble(binary_instr):
     index = register[rs1] + immediate
     value = convert_to_bin(register[rs2])
     if binary_instr[17:20] == '010': #sw; binary_instr[17:20] = funct3
-        #store word to data_file 
-        i = 0
-        while (i < 32):
-            data_file[index] = value[i:i+8]
-            index += 1
-            i += 8
+        if(register[rs1] == 536870912): #0x20000000 saves user input
+            print(chr(register[rs2]),end='')
+        else:
+            #store word to data_file 
+            i = 0
+            while (i < 32):
+                data_file[index] = value[i:i+8]
+                index += 1
+                i += 8
         
     pc_counter += 1
     return 
@@ -238,11 +241,10 @@ def u_format_disassemble(binary_instr):
 
     if opcode == '0110111': #lui
         register[rd] = immediate 
-        pc_counter += 1
     elif opcode == '0010111': #auipc
         register[rd] = immediate + (pc_counter)*4
-        pc_counter += 1
-
+        
+    pc_counter += 1
     return 
 
 #main ====================================================================================
