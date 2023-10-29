@@ -53,7 +53,6 @@ def to_twos_comp(binary_str, bits):
         val = val - (1 << bits)        # compute negative value
     return val 
 
-#CHECK IF THIS PRINTS OUT NEGTIAVE VALUES CORRECTLY
 #prints final value of the registers in hexadecimal
 def print_final_registers(register):
     for i in range(len(register)):
@@ -77,38 +76,27 @@ def r_format_disassemble(binary_instr):
         if funct7 == '0000000':
             if funct3 == '000': #add
                 register[rd] = register[rs1] + register[rs2]
-                print("add x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '001': #sll 
                 #shift using only lower 5 bits
                 register[rd] = register[rs1] << int(convert_to_bin(register[rs2])[-5:], 2)
-                print("sll x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '010': #slt 
-                #test case 3 seems to be the opposite
-                #test case 3 works with register[rs1] > register[rs2]
                 register[rd] = 1 if register[rs1] < register[rs2] else 0
-                print("slt x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '100': #xor
                 register[rd] = register[rs1] ^ register[rs2]
-                print("xor x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '101': #srl
                 if register[rs1] >= 0:
                     register[rd] = register[rs1] >> int(binary_rs2[-5:], 2)
                 else:
                     register[rd] = (register[rs1]+ 0x100000000) >> int(binary_rs2[-5:], 2)
-                print("srl x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '110': #or
                 register[rd] = register[rs1] | register[rs2]
-                print("or x{}, x{}, x{}".format(rd, rs1, rs2))
             elif funct3 == '111': #and
                 register[rd] = register[rs1] & register[rs2]
-                print("and x{}, x{}, x{}".format(rd, rs1, rs2))
         elif funct7 == '0100000':
             if funct3 == '000': #sub
                 register[rd] = register[rs1] - register[rs2]
-                print("sub x{}, x{}, x{}".format(rd, rs1, rs2))
             if funct3 == '101': #sra
                 register[rd] = register[rs1] >> int(binary_rs2[-5:], 2)
-                print("sra x{}, x{}, x{}".format(rd, rs1, rs2))
     
     pc_counter += 1
     return 
@@ -131,49 +119,37 @@ def i_format_disassemble(binary_instr):
         else:
             index = register[rs1] + immediate #index of the data_file
             register[rd] = to_twos_comp(data_file[index] + data_file[index+1] + data_file[index+2] + data_file[index+3], 32)
-        print("lw x{}, {}(x{})".format(rd, immediate, rs1))
         pc_counter += 1
     elif opcode == '0010011':
         if funct3 == '000': #addi
             register[rd] = register[rs1] + immediate
-            print("addi x{} x{} {}".format(rd, rs1, immediate))
         elif funct3 == '010': #slti
             register[rd] = 1 if register[rs1] < immediate else 0
-            print("slti x{} x{} {}".format(rd, rs1, immediate))
         elif funct3 == '100': #xori
             register[rd] = register[rs1] ^ immediate
-            print("xori x{} x{} {}".format(rd, rs1, immediate))
         elif funct3 == '110': #ori
             register[rd] = register[rs1] | immediate
-            print("ori x{} x{} {}".format(rd, rs1, immediate))
         elif funct3 == '111': #andi
             register[rd] = register[rs1] & immediate
-            print("andi x{} x{} {}".format(rd, rs1, immediate))
 
         shamt = int(binary_instr[7:12], 2) #rs2 location
         binary_shamt = convert_to_bin(shamt)
         if binary_instr[:7] == '0000000':
             if funct3 == '001': #slli
                 register[rd] = register[rs1] << int(binary_shamt[-5:], 2)
-                print("slli x{}, x{}, {}".format(rd, rs1, int(binary_shamt[-5:], 2)))
             if funct3 == '101': #srli
                 if register[rs1] >= 0:
                     register[rd] = register[rs1] >> int(binary_shamt[-5:], 2)
                 else:
                     register[rd] = (register[rs1]+ 0x100000000) >> int(binary_shamt[-5:], 2)
-                print("srli x{}, x{}, {}".format(rd, rs1, shamt))
         if binary_instr[:7] == '0100000': 
             if funct3 == '101': #srai
                 register[rd] = register[rs1] >> int(binary_shamt[-5:], 2)
-            print("srai x{}, x{}, {}".format(rd, rs1, shamt))
         
         pc_counter += 1
     elif opcode == '1100111' and funct3 == '000': #jalr 
-        #R[rd] = PC + 4
-        #PC = (R[rs1] + SignExt(imm12)) & (~1) for alignment purposes
-        register[rd] = (pc_counter + 1)*4
-        pc_counter = (int(register[rs1]/4) + int(immediate/4)) #
-        print("jalr x{}, x{}, {}".format(rd, rs1, immediate))
+        register[rd] = (pc_counter + 1)*4 #multiplied by 4 because each instruction is 4 bytes
+        pc_counter = (int(register[rs1]/4) + int(immediate/4)) 
     
     return
 
@@ -196,7 +172,6 @@ def s_format_disassemble(binary_instr):
             data_file[index] = value[i:i+8]
             index += 1
             i += 8
-        print("sw x{}, {}(x{})".format(rs2, immediate, rs1))
         
     pc_counter += 1
     return 
@@ -217,27 +192,21 @@ def sb_format_disassemble(binary_instr):
             pc_counter += int(immediate/4)
         else:
             pc_counter += 1
-        print("beq x{}, x{}, {}".format(rs1, rs2, immediate))
     elif funct3 == '001': #bne
-        print("before " + str(pc_counter))
         if(register[rs1] != register[rs2]):
             pc_counter += int(immediate/4)
         else:
             pc_counter += 1
-        print("bne x{}, x{}, {}".format(rs1, rs2, immediate))
-        print("after " + str(pc_counter))
     elif funct3 == '100': #blt
         if(register[rs1]< register[rs2]):
             pc_counter += int(immediate/4)
         else:
             pc_counter += 1
-        print("blt x{}, x{}, {}".format(rs1, rs2, immediate))
     elif funct3 == '101': #bge
         if(register[rs1] >= register[rs2]):
             pc_counter += int(immediate/4)
         else:
             pc_counter += 1
-        print("bge x{}, x{}, {}".format(rs1, rs2, immediate))
 
     return 
 
@@ -251,12 +220,9 @@ def uj_format_disassemble(binary_instr):
     global data_file   
     global pc_counter
 
-    #jal rd, imm
-    #R[rd] = PC + 4
-    #PC = PC + SignExt(imm20 << 1)
+    #jal
     register[rd] = (pc_counter + 1)* 4
     pc_counter += int(immediate/4)
-    print("jal x{}, {}".format(rd, immediate))
 
     return 
 
@@ -272,35 +238,29 @@ def u_format_disassemble(binary_instr):
 
     if opcode == '0110111': #lui
         register[rd] = immediate 
-        print("lui x{}, {}".format(rd, immediate))
         pc_counter += 1
     elif opcode == '0010111': #auipc
-        #auipc rd, D[31:12]+D[11] addi rd, rd, D[11:0]
-        #Load absolute address where D = symbol – pc
-        print("auipc x{}, {}".format(rd, immediate))
+        register[rd] = immediate + (pc_counter)*4
+        pc_counter += 1
 
     return 
 
 #main ====================================================================================
-
-#taking in the arguments
 instr_file = read_instr_file(sys.argv[1]) #takes in the instruction binary file as first input
-second_arg = sys.argv[2] #takes in the second argument
 
 #takes in number of instructions to run and initializes binary data file
 if(len(sys.argv) == 3):
-    n = int(second_arg)
+    n = int(sys.argv[2])
     i = 268435456 #0x10000000
     data_file = {} #dictionary; keys are in decimal
     while (i <= 268500991): #0x1000FFFF
         data_file[i] = "11111111" #initialized to 0xFF
         i += 1
 else:
-    data_file = read_data_file(second_arg) 
+    data_file = read_data_file(sys.argv[2]) 
     n = int(sys.argv[3])
 
 register = [0] * 32 #registers initialized to 0; decimal values
-
 pc_counter = 0 #points to the current instruction being read in the instr_file
 
 #loop until n instructions are executed and there are instructions left to be read
