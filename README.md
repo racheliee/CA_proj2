@@ -2,14 +2,14 @@
 Single-cycle RISC-V CPU Simulator
 
 ## Supported Instructions
-◼ add, sub, addi
-◼ xor, or, and, xori, ori, andi
-◼ slli, srli, srai, sll, srl, sra
-◼ slti, slt
-◼ auipc, lui
-◼ jal, jalr
-◼ beq, bne, blt, bge
-◼ lw, sw
+  ◼ add, sub, addi\
+  ◼ xor, or, and, xori, ori, andi\
+  ◼ slli, srli, srai, sll, srl, sra\
+  ◼ slti, slt\
+  ◼ auipc, lui\
+  ◼ jal, jalr\
+  ◼ beq, bne, blt, bge\
+  ◼ lw, sw
 
 ## Simulator Program Behaviour
 Takes 2 or 3 command-line arguments.
@@ -26,5 +26,5 @@ Takes 2 or 3 command-line arguments.
 
 ❖ If there is no more instruction to execute after executing N instructions, stop simulation
 
-◼ All registers are initialized to zero (0x00000000) at the beginning.
+◼ All registers are initialized to zero (0x00000000) at the beginning.\
 ◼ x0 is fixed to zero.
